@@ -25,6 +25,12 @@ function preload(){
   	this.player.body.setGravityY(800);
   	this.physics.add.collider(this.player, this.platforms);
 	  this.cameras.main.startFollow(this.player);
+    this.player.score = 0;
+	  this.scoreText = this.add.text(0, 0, "Score: "+this.player.score, {
+		fill:"#000000",
+		fontSize:"20px",
+		fontFamily:"Arial Black"
+	}).setScrollFactor(0).setDepth(200);
   }
   this.parseMap = (map) => {
     let mapArr = map.split('.');
@@ -55,9 +61,9 @@ function create(){
   const map = '11111111111111111111111111.'+
             '1                        1.'+
             '1                        1.'+
-            '1 2  1     1     1     1 1.'+
+            '1    1     1     1     1 1.'+
             '1 1     1     1     1    1.'+
-            '1                        1.'+
+            '1          2             1.'+
             '1                        1.'+
             '1    1     1     1     1 1.'+
             '1 1     1     1     1    1.'+
@@ -74,12 +80,29 @@ function create(){
   this.key_W = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
   this.key_A = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
   this.key_D = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-	this.player.score = 0;
-	this.scoreText = this.add.text(0, 0, "Score: "+this.player.score, {
-		fill:"#000000",
-		fontSize:"20px",
-		fontFamily:"Arial Black"
-	}).setScrollFactor(0).setDepth(200);
+	
+  this.anims.create({
+    key:"walk",
+    frames:[
+      {
+        key:"player", frame:"sprite_2"
+      }, 
+      {
+        key:"player", frame:"sprite_1"
+      }
+    ],
+    frameRate:10,
+    repeat:-1
+  });
+  this.anims.create({
+    key:"stand",
+    frames:[
+      {
+        key:"player", frame:"sprite_0"
+      }
+    ],
+    frameRate:1
+  });
 };
 
 
@@ -90,10 +113,15 @@ function update(){
 	  this.player.setVelocityY(-550);
   }
   if (this.key_A.isDown){
-	  this.player.setVelocityX(-150);
+	  this.player.setVelocityX(-200);
+    this.player.anims.play("walk", true);
+     this.player.flipX = true;
   } else if (this.key_D.isDown){
-	  this.player.setVelocityX(150);
+	  this.player.setVelocityX(200);
+    this.player.anims.play("walk", true);
+     this.player.flipX = false;
   } else {
 	  this.player.setVelocityX(0);
+    this.player.anims.play("stand", true);
   }
 }

@@ -37,46 +37,72 @@ function preload(){
     let drawX = 0;
     let drawY = 0;
     mapArr.forEach(row=>{
-      drawX = 0;
-      for(let i = 0; i<row.length; i++){
-        if(row.charAt(i)==='1'){
-          this.platforms.create(drawX, drawY, "platform");
-        }else if(row.charAt(i)==='2'){
-          if(row.charAt(i+1)==='1'){
-            this.spawnPlayer(drawX-4, drawY-12);
-          }else if(row.charAt(i-1)==='1'){
-            this.spawnPlayer(drawX+4, drawY-12);
-          }else{
-            this.spawnPlayer(drawX, drawY-12);					
-          }
+	drawX = 0;
+	for(let i = 0; i<row.length; i++){
+		if(row.charAt(i)==='1'){
+			this.platforms.create(drawX, drawY, "platform");
+		}else if(row.charAt(i)==='2'){
+			if(row.charAt(i+1)==='1'){
+				this.spawnPlayer(drawX-4, drawY-12);
+			}else if(row.charAt(i-1)==='1'){
+				this.spawnPlayer(drawX+4, drawY-12);
+			}else{
+				this.spawnPlayer(drawX, drawY-12);					
+			}
+		}else if(row.charAt(i)==='c'){
+			this.coins.create(drawX, drawY+10, "coin");
+        //==================================
+		}else if(row.charAt(i)==='s'){
+        	this.spikes.create(drawX, drawY+10, "spike"); 
         }
-        drawX+=40;
-      }
-      drawY+=40;
-    });
+        //==================================
+		drawX+=40;
+	}
+	drawY+=40;
+});
   }
 }
 
 function create(){
-  const map = '11111111111111111111111111.'+
-            '1                        1.'+
-            '1                        1.'+
-            '1    1     1     1     1 1.'+
-            '1 1     1     1     1    1.'+
-            '1          2             1.'+
-            '1                        1.'+
-            '1    1     1     1     1 1.'+
+ const map = '11111111111111111111111111.'+
+            '1               c        1.'+
+            '1    c     c     s     c 1.'+
+            '1 2  1  s  1  c  1  c  1 1.'+
             '1 1     1     1     1    1.'+
             '1                        1.'+
-            '1                        1.'+
-            '1    1     1     1     1 1.'+
+            '1    c     c     s     s 1.'+
+            '1 c  1  s  1  c  1  c  1 1.'+
             '1 1     1     1     1    1.'+
             '1                        1.'+
+            '1    c     s     c     c 1.'+
+            '1 s  1  c  1  c  1  s  1 1.'+
+            '1 1     1     1     1    1.'+
             '1                        1.'+
+            '1   c       c     c   c  1.'+
             '11111111111111111111111111';
   this.cameras.main.setBackgroundColor('#00F9E6');  
   this.platforms = this.physics.add.staticGroup();
+  this.coins = this.physics.add.group();
+  this.spikes = this.physics.add.group();
   this.parseMap(map);
+  this.collectCoin = (player, coin)=>{
+	  player.score+=10;
+    this.scoreText.setText("Score: "+ this.player.score);
+    coin.destroy();
+  };
+  this.die = ()=>{
+	  this.physics.pause();
+    let deathText = this.add.text(0, 0, "YOU DIED", {
+        color:"#d53636",
+        fontFamily:"Arial Black",
+        fontSize:"50px"
+    }).setScrollFactor(0);
+    Phaser.Display.Align.In.Center(deathText, this.add.zone(650, 315, 1300, 630));
+  }
+  this.physics.add.overlap(this.player, this.spikes, this.die, null, this);
+
+
+  this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
   this.key_W = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
   this.key_A = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
   this.key_D = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);

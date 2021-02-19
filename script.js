@@ -18,7 +18,8 @@ let config = {
 let googleMap = null;
 
 function loadMap(loaded) {
-const googleCsv = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyhshapjmrz_2NO3Mi33zbS2kF_1P94MAKxloRfszV-B29P3Z7ngmiJJAEb7_wlHX-PpzrFq8LWWGI/pub?output=csv"
+  const t = new Date().getTime();
+const googleCsv = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyhshapjmrz_2NO3Mi33zbS2kF_1P94MAKxloRfszV-B29P3Z7ngmiJJAEb7_wlHX-PpzrFq8LWWGI/pub?output=csv&t="+t;
 xmlhttp=new XMLHttpRequest();
   xmlhttp.onreadystatechange = function() {
     if(xmlhttp.readyState == 4 && xmlhttp.status==200){

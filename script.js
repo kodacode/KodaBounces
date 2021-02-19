@@ -14,7 +14,26 @@ let config = {
     update: update
   }
 };
-const game = new Phaser.Game(config);
+
+let googleMap = null;
+
+function loadMap(loaded) {
+const googleCsv = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyhshapjmrz_2NO3Mi33zbS2kF_1P94MAKxloRfszV-B29P3Z7ngmiJJAEb7_wlHX-PpzrFq8LWWGI/pub?output=csv"
+xmlhttp=new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if(xmlhttp.readyState == 4 && xmlhttp.status==200){
+      loaded(xmlhttp.responseText);
+    }
+  };
+  xmlhttp.open("GET",googleCsv,true);
+  xmlhttp.send(null);
+}
+
+loadMap(function(map) {
+  googleMap=map;
+  const game = new Phaser.Game(config);
+})
+
 function preload() {
   this.load.atlas("player", "assets/spritesheet.png", "assets/sprites.json");
   this.load.image("platform", "assets/platform.png");
@@ -33,26 +52,31 @@ function preload() {
     }).setScrollFactor(0).setDepth(200);
   }
   this.parseMap = (map) => {
-    let mapArr = map.split('.');
+    let mapArr = map.split('\n');
     let drawX = 0;
     let drawY = 0;
     mapArr.forEach(row => {
+      const rowS = row.split(',');
+      console.log(rowS);
       drawX = 0;
-      for (let i = 0; i < row.length; i++) {
-        if (row.charAt(i) === '1') {
+      for (let i = 0; i < rowS.length; i++) {
+        const c = rowS[i];
+        console.log(c, drawX, drawY);
+        if (c.charAt(0) === '1') {
+          console.log('yes');
           this.platforms.create(drawX, drawY, "platform");
-        } else if (row.charAt(i) === '2') {
-          if (row.charAt(i + 1) === '1') {
+        } else if (c.charAt(0) === '2') {
+          if (rowS[i + 1].charAt(0) === '1') {
             this.spawnPlayer(drawX - 4, drawY - 12);
-          } else if (row.charAt(i - 1) === '1') {
+          } else if (rowS[i - 1].charAt(0) === '1') {
             this.spawnPlayer(drawX + 4, drawY - 12);
           } else {
             this.spawnPlayer(drawX, drawY - 12);
           }
-        } else if (row.charAt(i) === 'c') {
+        } else if (c.charAt(0) === 'c') {
           this.coins.create(drawX, drawY + 10, "coin");
           //==================================
-        } else if (row.charAt(i) === 's') {
+        } else if (c.charAt(0) === 's') {
           this.spikes.create(drawX, drawY + 10, "spike");
         }
         //==================================
@@ -64,27 +88,13 @@ function preload() {
 }
 
 function create() {
-  const map = '11111111111111111111111111.' +
-    '1               c        1.' +
-    '1    c     c     s     c 1.' +
-    '1 2  1  s  1  c  1  c  1 1.' +
-    '1 1     1     1     1    1.' +
-    '1                        1.' +
-    '1    c     c     s     s 1.' +
-    '1 c  1  s  1  c  1  c  1 1.' +
-    '1 1     1     1     1    1.' +
-    '1                        1.' +
-    '1    c     s     c     c 1.' +
-    '1 s  1  c  1  c  1  s  1 1.' +
-    '1 1     1     1     1    1.' +
-    '1                        1.' +
-    '1   c       c     c   c  1.' +
-    '11111111111111111111111111';
+  
   this.cameras.main.setBackgroundColor('#00F9E6');
   this.platforms = this.physics.add.staticGroup();
   this.coins = this.physics.add.group();
   this.spikes = this.physics.add.group();
-  this.parseMap(map);
+  console.log(googleMap)
+  this.parseMap(googleMap);
   this.collectCoin = (player, coin) => {
     player.score += 10;
     this.scoreText.setText("Score: " + this.player.score);
@@ -134,9 +144,6 @@ function create() {
     frameRate: 1
   });
 };
-
-
-
 
 function update() {
   if ((this.key_W.isDown || this.key_Up.isDown || this.key_Space.isDown) && this.player.body.touching.down) {

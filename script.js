@@ -1,7 +1,7 @@
 let config = {
   type: Phaser.AUTO,
-  width: 1300,
-  height: 630,
+  width: window.innerWidth - 20,
+  height: window.innerHeight - 20,
   physics: {
     default: 'arcade',
     arcade: {
@@ -19,27 +19,33 @@ let googleMap = null;
 
 function loadMap(loaded) {
   const t = new Date().getTime();
-const googleCsv = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyhshapjmrz_2NO3Mi33zbS2kF_1P94MAKxloRfszV-B29P3Z7ngmiJJAEb7_wlHX-PpzrFq8LWWGI/pub?output=csv&t="+t;
-xmlhttp=new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function() {
-    if(xmlhttp.readyState == 4 && xmlhttp.status==200){
+  const googleCsv = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyhshapjmrz_2NO3Mi33zbS2kF_1P94MAKxloRfszV-B29P3Z7ngmiJJAEb7_wlHX-PpzrFq8LWWGI/pub?output=csv&t=" + t;
+  xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function () {
+    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
       loaded(xmlhttp.responseText);
     }
   };
-  xmlhttp.open("GET",googleCsv,true);
+  xmlhttp.open("GET", googleCsv, true);
   xmlhttp.send(null);
 }
 
-loadMap(function(map) {
-  googleMap=map;
+loadMap(function (map) {
+  googleMap = map;
   const game = new Phaser.Game(config);
 })
 
 function preload() {
   this.load.atlas("player", "assets/spritesheet.png", "assets/sprites.json");
+  this.load.atlas("enemy", "assets/enemy.png", "assets/sprites.json");
+
   this.load.image("platform", "assets/platform.png");
   this.load.image("spike", "assets/spike.png");
   this.load.image("coin", "assets/coin.png");
+  this.load.image("megacoin", "assets/megacoin.png");
+  this.spawnEnemy = (x, y) => {
+    this.enemies.create(x, y, "enemy", "sprite_0");
+  }
   this.spawnPlayer = (x, y) => {
     this.player = this.physics.add.sprite(x, y, "player", "sprite_0");
     this.player.body.setGravityY(800);
@@ -74,9 +80,12 @@ function preload() {
           } else {
             this.spawnPlayer(drawX, drawY - 12);
           }
+        } else if (c.charAt(0) === 'm') {
+          this.megacoins.create(drawX, drawY + 10, "megacoin");
+        } else if (c.charAt(0) === 'e') {
+          this.spawnEnemy(drawX, drawY - 12);
         } else if (c.charAt(0) === 'c') {
           this.coins.create(drawX, drawY + 10, "coin");
-          //==================================
         } else if (c.charAt(0) === 's') {
           this.spikes.create(drawX, drawY + 10, "spike");
         }
@@ -89,10 +98,13 @@ function preload() {
 }
 
 function create() {
-  
+
   this.cameras.main.setBackgroundColor('#00F9E6');
   this.platforms = this.physics.add.staticGroup();
   this.coins = this.physics.add.group();
+  this.megacoins = this.physics.add.group();
+  this.enemies = this.physics.add.group();
+
   this.spikes = this.physics.add.group();
   console.log(googleMap)
   this.parseMap(googleMap);
@@ -101,6 +113,12 @@ function create() {
     this.scoreText.setText("Score: " + this.player.score);
     coin.destroy();
   };
+  this.collectMegaCoin = (player, megacoin) => {
+    player.score += 100;
+    this.scoreText.setText(" Score: " + this.player.score);
+    megacoin.destroy();
+  };
+
   this.die = () => {
     this.physics.pause();
     let deathText = this.add.text(0, 0, "YOU DIED", {
@@ -108,12 +126,13 @@ function create() {
       fontFamily: "Arial Black",
       fontSize: "50px"
     }).setScrollFactor(0);
-    Phaser.Display.Align.In.Center(deathText, this.add.zone(650, 315, 1300, 630));
+    Phaser.Display.Align.In.Center(deathText, this.add.zone(config.width / 2, config.height / 2, config.width, config.height));
   }
   this.physics.add.overlap(this.player, this.spikes, this.die, null, this);
-
+  this.physics.add.overlap(this.player, this.enemies, this.die, null, this);
 
   this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
+  this.physics.add.overlap(this.player, this.megacoins, this.collectMegaCoin, null, this);
   this.key_Space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   this.key_W = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
   this.key_A = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
@@ -163,3 +182,4 @@ function update() {
     this.player.anims.play("stand", true);
   }
 }
+
